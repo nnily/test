@@ -1,0 +1,733 @@
+﻿<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>배너 프롬프트 생성기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#F2F4F6;
+  --white:#fff;
+  --text:#191F28;
+  --text2:#333D4B;
+  --sub:#6B7684;
+  --hint:#B0B8C1;
+  --line:#E5E8EB;
+  --fill:#F2F4F6;
+  --green:#00C471;
+  --green-bg:#E8FAF2;
+  --green-ring:#A3EACE;
+  --red:#F04452;
+  --red-bg:#FFF0F1;
+  --purple:#8A6FE8;
+  --purple-bg:#F0EEFF;
+  --orange:#FF7B00;
+  --s1:0 1px 4px rgba(0,0,0,.05);
+  --s2:0 2px 12px rgba(0,0,0,.07);
+  --s3:0 8px 32px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:100px}
+
+/* ─ 앱바 ─ */
+.appbar{
+background:var(–white);
+display:flex;align-items:center;
+padding:0 20px;height:56px;
+position:sticky;top:0;z-index:200;
+border-bottom:1px solid var(–line);
+}
+.ab-back{
+width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+border-radius:50%;cursor:pointer;margin-left:-8px;margin-right:4px;
+transition:background .12s;
+}
+.ab-back:hover{background:var(–fill)}
+.ab-back svg{width:20px;height:20px;stroke:var(–text);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.ab-title{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.ab-chip{
+margin-left:auto;
+background:var(–green-bg);color:var(–green);
+font-size:10px;font-weight:700;border-radius:20px;
+padding:4px 11px;letter-spacing:.01em;
+}
+
+/* ─ 히어로 ─ */
+.hero{
+background:var(–white);
+padding:32px 24px 28px;
+margin-bottom:8px;
+}
+.hero-label{
+font-size:11px;font-weight:700;color:var(–green);
+letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;
+}
+.hero-title{
+font-size:26px;font-weight:900;color:var(–text);
+line-height:1.2;letter-spacing:-.04em;
+}
+.hero-title em{color:var(–green);font-style:normal}
+.hero-desc{
+font-size:14px;color:var(–sub);line-height:1.7;
+margin-top:10px;
+}
+
+/* ─ 그룹 ─ */
+.group{background:var(–white);margin:8px 0}
+
+/* ─ 섹션 헤더 ─ */
+.sec-head{
+display:flex;align-items:center;gap:14px;
+padding:24px 24px 0;
+}
+.step-circle{
+width:28px;height:28px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+font-size:12px;font-weight:800;flex-shrink:0;
+background:var(–fill);color:var(–hint);
+transition:all .25s;
+}
+.step-circle.active{background:var(–green-bg);color:var(–green)}
+.step-circle.done{background:var(–green);color:#fff}
+.sec-label{
+font-size:17px;font-weight:800;letter-spacing:-.02em;
+flex:1;
+}
+.sec-opt{font-size:12px;color:var(–hint);font-weight:500}
+.sec-check{
+font-size:11px;font-weight:700;color:var(–green);
+background:var(–green-bg);border-radius:20px;
+padding:3px 9px;display:none;
+}
+
+/* ─ 섹션 본문 ─ */
+.sec-body{padding:12px 24px 24px}
+.sec-desc{font-size:13px;color:var(–sub);line-height:1.65;margin-bottom:16px}
+
+/* ─ 구분선 ─ */
+.sep{height:1px;background:var(–line);margin:0 24px}
+
+/* ─ 텍스트 입력 ─ */
+.input-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.input-lbl{font-size:12px;font-weight:700;color:var(–sub);letter-spacing:.04em}
+.clrbtn{background:none;border:none;color:var(–hint);font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;padding:2px 0;transition:color .12s}
+.clrbtn:hover{color:var(–text2)}
+textarea{
+width:100%;min-height:140px;
+background:var(–fill);border:none;border-radius:16px;
+padding:16px;font-size:14px;color:var(–text);
+outline:none;font-family:‘Noto Sans KR’,sans-serif;
+resize:vertical;line-height:1.8;
+transition:background .15s,box-shadow .15s;
+}
+textarea:focus{background:#fff;box-shadow:0 0 0 2px var(–green-ring),var(–s1)}
+textarea.has{background:#fff;box-shadow:0 0 0 1.5px var(–green-ring)}
+.char-cnt{font-size:11px;color:var(–green);margin-top:8px;font-weight:600;display:none}
+
+/* ─ 드롭존 ─ */
+.dz{
+border:2px dashed var(–line);border-radius:18px;
+cursor:pointer;background:var(–fill);
+position:relative;overflow:hidden;
+display:flex;align-items:center;justify-content:center;
+min-height:96px;
+transition:border-color .15s,background .15s;
+}
+.dz:hover,.dz:active{background:var(–green-bg);border-color:var(–green-ring)}
+.dz.on{background:var(–green-bg);border-color:var(–green);border-style:solid}
+.dz img{width:100%;display:block;border-radius:16px;object-fit:contain;padding:8px;max-height:220px}
+.dz-inner{text-align:center;padding:20px 16px;pointer-events:none}
+.dz-icon{
+width:44px;height:44px;border-radius:14px;
+background:var(–white);display:flex;align-items:center;justify-content:center;
+font-size:22px;margin:0 auto 10px;box-shadow:var(–s1);
+}
+.dz-lbl{font-size:14px;font-weight:600;color:var(–text2)}
+.dz-sub{font-size:11px;color:var(–hint);margin-top:4px}
+.rep-tag{
+position:absolute;bottom:10px;right:10px;
+background:rgba(25,31,40,.6);backdrop-filter:blur(8px);
+border-radius:10px;padding:4px 10px;font-size:11px;color:#fff;font-weight:600;
+}
+.ov{
+position:absolute;inset:0;
+background:rgba(242,244,246,.93);backdrop-filter:blur(5px);
+display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+z-index:10;border-radius:16px;
+}
+.ov-txt{font-size:13px;font-weight:700;color:var(–green)}
+.spin{width:24px;height:24px;border-radius:50%;border:3px solid var(–green-ring);border-top-color:var(–green);animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ─ 분석 결과 ─ */
+.ana-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.ana-box{border-radius:14px;padding:14px}
+.ana-box.col-box{background:var(–purple-bg)}
+.ana-box.sty-box{background:var(–green-bg)}
+.ana-ttl{font-size:10px;font-weight:800;letter-spacing:.06em;margin-bottom:10px;text-transform:uppercase}
+.col-box .ana-ttl{color:var(–purple)}
+.sty-box .ana-ttl{color:var(–green)}
+.pal-bar{display:flex;border-radius:8px;overflow:hidden;height:20px;margin-bottom:8px}
+.pal-bar div{flex:1}
+.pal-chips{display:flex;flex-wrap:wrap;gap:4px}
+.pchip{display:flex;align-items:center;gap:3px;font-size:9px;color:var(–sub);font-family:‘JetBrains Mono’,monospace}
+.pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sty-badge{
+display:inline-flex;align-items:center;gap:6px;
+background:var(–white);border-radius:10px;
+padding:6px 11px;margin-bottom:8px;
+box-shadow:var(–s1);
+}
+.sty-name{font-size:12px;font-weight:800;color:var(–green)}
+.sty-desc{font-size:10px;color:var(–sub);line-height:1.55;margin-bottom:9px}
+.met-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.met{background:rgba(255,255,255,.65);border-radius:9px;padding:7px 8px}
+.met-lbl{font-size:8px;color:var(–hint);font-weight:700;letter-spacing:.04em;margin-bottom:4px}
+.met-bar{height:3px;background:rgba(0,0,0,.08);border-radius:2px;overflow:hidden;margin-bottom:3px}
+.met-fill{height:100%;border-radius:2px}
+.met-val{font-size:9px;font-weight:700;color:var(–text2);font-family:‘JetBrains Mono’,monospace}
+.ana-note{font-size:10px;color:var(–sub);margin-top:9px;padding-top:8px;border-top:1px solid rgba(0,0,0,.06)}
+
+/* ─ 설정 선택 ─ */
+.cfg-block{margin-bottom:20px}
+.cfg-lbl{font-size:12px;font-weight:700;color:var(–sub);letter-spacing:.05em;margin-bottom:10px;text-transform:uppercase}
+.chip-grid{display:flex;flex-wrap:wrap;gap:7px}
+.sz-chip{
+background:var(–fill);border:none;border-radius:12px;
+padding:10px 14px;cursor:pointer;font-family:inherit;
+transition:all .15s;text-align:left;
+}
+.sz-chip:hover{background:var(–green-bg)}
+.sz-chip.on{background:var(–green-bg);box-shadow:0 0 0 1.5px var(–green-ring)}
+.sz-chip .sn{font-size:13px;font-weight:700;color:var(–text2);display:block}
+.sz-chip.on .sn{color:var(–green)}
+.sz-chip .sp{font-size:10px;color:var(–hint);margin-top:2px;font-family:‘JetBrains Mono’,monospace;display:block}
+.stag{background:var(–orange);color:#fff;border-radius:5px;padding:1px 5px;font-size:8px;font-weight:800;margin-left:3px;vertical-align:middle}
+.custrow{display:flex;gap:8px;align-items:center;margin-top:10px}
+.custrow input{
+flex:1;background:var(–fill);border:none;border-radius:10px;
+padding:10px;font-size:13px;color:var(–text);
+outline:none;text-align:center;font-family:‘JetBrains Mono’,monospace;
+transition:box-shadow .15s;
+}
+.custrow input:focus{box-shadow:0 0 0 2px var(–green-ring)}
+.mo-chip{
+background:var(–fill);border:none;border-radius:12px;
+padding:10px 14px;cursor:pointer;font-family:inherit;
+display:flex;align-items:center;gap:8px;
+transition:all .15s;
+}
+.mo-chip:hover{background:var(–green-bg)}
+.mo-chip.on{background:var(–green-bg);box-shadow:0 0 0 1.5px var(–green-ring)}
+.mo-em{font-size:16px;line-height:1}
+.mo-lbl{font-size:13px;font-weight:600;color:var(–sub)}
+.mo-chip.on .mo-lbl{color:var(–green);font-weight:700}
+
+/* ─ 엑스트라 ─ */
+.ext-inp{
+width:100%;background:var(–fill);border:none;
+border-radius:14px;padding:15px 16px;
+font-size:14px;color:var(–text);
+outline:none;font-family:inherit;
+transition:all .15s;
+}
+.ext-inp:focus{background:#fff;box-shadow:0 0 0 2px var(–green-ring)}
+.ext-inp::placeholder{color:var(–hint)}
+
+/* ─ FAB 생성 버튼 ─ */
+.fab-wrap{
+position:fixed;bottom:0;left:0;right:0;
+padding:12px 20px 28px;
+background:linear-gradient(transparent,rgba(242,244,246,.97) 30%);
+z-index:100;
+max-width:480px;margin:0 auto;
+}
+/* 모바일 실기기에선 max-width fixed 레이아웃을 위해 */
+@media(min-width:480px){
+.fab-wrap{left:50%;right:auto;transform:translateX(-50%);width:480px}
+}
+.gbtn{
+width:100%;border:none;border-radius:16px;
+padding:18px;
+font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;
+transition:all .2s;letter-spacing:-.02em;
+display:flex;align-items:center;justify-content:center;
+}
+.gbtn.off{background:var(–line);color:var(–hint);cursor:not-allowed}
+.gbtn.on{
+background:var(–green);color:#fff;
+box-shadow:0 6px 24px rgba(0,196,113,.35);
+}
+.gbtn.on:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,196,113,.4)}
+.gbtn.on:active{transform:translateY(0);box-shadow:0 3px 12px rgba(0,196,113,.3)}
+
+/* ─ 결과 ─ */
+.res{display:none;margin:8px 0}
+.res-group{background:var(–white)}
+.res-head{
+padding:24px 24px 0;
+display:flex;align-items:center;gap:10px;
+}
+.res-ttl{font-size:20px;font-weight:900;letter-spacing:-.03em}
+.res-badge{
+margin-left:auto;font-size:10px;font-weight:700;
+color:var(–green);background:var(–green-bg);
+border-radius:20px;padding:4px 11px;
+}
+.tabs{
+display:flex;gap:0;margin:16px 24px 0;
+background:var(–fill);border-radius:14px;padding:4px;
+}
+.tab{
+flex:1;border:none;border-radius:10px;padding:10px 4px;
+cursor:pointer;font-size:12px;font-weight:700;color:var(–sub);
+font-family:inherit;transition:all .15s;background:transparent;
+}
+.tab.on{background:var(–white);color:var(–text);box-shadow:var(–s1)}
+.var-body{padding:16px 24px 0}
+.rblk{margin-bottom:12px}
+.rlbl{font-size:11px;font-weight:700;color:var(–sub);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
+.rbody{
+background:var(–fill);border-radius:14px;
+padding:14px 72px 14px 16px;position:relative;
+}
+.rbody.neg{background:var(–red-bg)}
+.rtext{font-size:12px;line-height:1.85;color:#1A7A4A;font-family:‘JetBrains Mono’,monospace;word-break:break-all;margin:0}
+.rtext.neg{color:#C8303A}
+.cpbtn{
+position:absolute;top:12px;right:12px;
+background:var(–white);color:var(–green);
+border:none;border-radius:9px;
+padding:6px 12px;font-size:11px;font-weight:700;
+cursor:pointer;font-family:inherit;
+transition:all .15s;box-shadow:var(–s1);white-space:nowrap;
+}
+.cpbtn:hover{background:var(–green-bg)}
+.cpbtn.done{background:var(–green-bg);color:var(–green)}
+.res-divider{height:1px;background:var(–line);margin:16px 24px}
+.ref-sum{margin:0 24px 14px;padding:14px 16px;background:var(–purple-bg);border-radius:14px}
+.ref-sum-ttl{font-size:10px;font-weight:800;color:var(–purple);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+.tips-box{margin:0 24px 14px;background:var(–green-bg);border-radius:14px;padding:15px 16px}
+.tips-ttl{font-size:10px;font-weight:800;color:var(–green);letter-spacing:.05em;text-transform:uppercase;margin-bottom:9px}
+.tip{display:flex;gap:8px;margin-bottom:8px}.tip:last-child{margin-bottom:0}
+.tip-a{color:var(–green);font-weight:800;flex-shrink:0}
+.tip-t{font-size:12px;color:var(–text2);line-height:1.65}
+.tools-row{padding:0 24px 24px}
+.tools-lbl{font-size:11px;font-weight:700;color:var(–sub);letter-spacing:.06em;text-transform:uppercase;margin-bottom:9px}
+.tools{display:flex;gap:7px;flex-wrap:wrap}
+.tool{
+background:var(–fill);border-radius:11px;padding:9px 13px;
+transition:background .12s;cursor:default;
+}
+.tn{font-size:12px;font-weight:700;color:var(–text2)}
+.td{font-size:10px;color:var(–hint);margin-top:1px}
+
+footer{text-align:center;color:var(–hint);font-size:11px;padding:20px 16px;font-weight:500}
+
+@media(max-width:360px){
+.ana-wrap{grid-template-columns:1fr}
+.hero-title{font-size:22px}
+}
+</style>
+
+</head>
+<body>
+
+<!-- 앱바 -->
+
+<div class="appbar">
+  <div class="ab-back">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </div>
+  <span class="ab-title">배너 프롬프트 생성기</span>
+  <span class="ab-chip">DB손해보험</span>
+</div>
+
+<!-- 히어로 -->
+
+<div class="hero">
+  <div class="hero-label">Design Automation</div>
+  <div class="hero-title">배너 프롬프트를<br><em>자동으로</em> 만들어요</div>
+  <div class="hero-desc">내용 입력 + 레퍼런스 이미지 분석으로<br>AI 이미지 생성 프롬프트를 완성해드려요</div>
+</div>
+
+<!-- STEP 01 -->
+
+<div class="group">
+  <div class="sec-head" id="card1">
+    <div class="step-circle active" id="s1n">1</div>
+    <span class="sec-label">배너 내용 입력</span>
+    <span class="sec-check" id="s1ok">입력 완료</span>
+  </div>
+  <div class="sec-body">
+    <p class="sec-desc">배너에 들어갈 텍스트를 입력하세요<br>문서가 있다면 이 채팅창에 사진을 보내면 Claude가 텍스트를 뽑아드려요 💡</p>
+    <div class="input-row">
+      <span class="input-lbl">내용</span>
+      <button class="clrbtn" id="clr-btn" style="display:none" onclick="clearTxt()">지우기</button>
+    </div>
+    <textarea id="content"
+      placeholder="예&#10;임블리와 함께하는 현장중심의 유익한 방송&#10;손해율 개선 TV&#10;손해율지표현황 · 2025손익진단 · 알쓸정보"
+      oninput="onTxt(this)"></textarea>
+    <div class="char-cnt" id="tcnt"></div>
+  </div>
+</div>
+
+<!-- STEP 02 -->
+
+<div class="group" style="margin-top:8px">
+  <div class="sec-head" id="card2">
+    <div class="step-circle" id="s2n">2</div>
+    <span class="sec-label">스타일 레퍼런스</span>
+    <span class="sec-opt">선택</span>
+    <span class="sec-check" id="s2ok">분석 완료</span>
+  </div>
+  <div class="sec-body">
+    <p class="sec-desc">원하는 디자인 이미지를 올려주세요<br>색상 팔레트와 스타일을 자동으로 분석해요</p>
+    <div class="dz" id="ref-zone" onclick="refInp.click()">
+      <div class="dz-inner" id="ref-empty">
+        <div class="dz-icon">🖼️</div>
+        <div class="dz-lbl">이미지 업로드</div>
+        <div class="dz-sub">클릭 또는 드래그 · 없어도 생성 가능</div>
+      </div>
+      <div class="ov" id="ref-ov" style="display:none">
+        <div class="spin"></div>
+        <div class="ov-txt">분석 중...</div>
+      </div>
+    </div>
+    <input type="file" id="refInp" accept="image/*" style="display:none" onchange="handleRef(this.files[0])"/>
+    <div id="ana-area"></div>
+  </div>
+</div>
+
+<!-- STEP 03 -->
+
+<div class="group" style="margin-top:8px">
+  <div class="sec-head">
+    <div class="step-circle active">3</div>
+    <span class="sec-label">배너 설정</span>
+  </div>
+  <div class="sec-body">
+    <div class="cfg-block">
+      <div class="cfg-lbl">사이즈</div>
+      <div class="chip-grid" id="sz-grid"></div>
+      <div class="custrow" id="cust-row" style="display:none">
+        <input type="number" id="cw" value="420"/>
+        <span style="font-size:15px;color:var(--hint)">×</span>
+        <input type="number" id="ch" value="320"/>
+        <span style="font-size:12px;color:var(--hint);font-weight:600">px</span>
+      </div>
+    </div>
+    <div class="cfg-block" style="margin-bottom:0">
+      <div class="cfg-lbl">분위기</div>
+      <div class="chip-grid" id="mo-grid"></div>
+    </div>
+    <div style="margin-top:20px">
+      <div class="cfg-lbl" style="margin-bottom:10px">추가 요청 <span style="font-weight:500;color:var(--hint);text-transform:none;letter-spacing:0">(선택)</span></div>
+      <input class="ext-inp" id="extra" type="text" placeholder="예: 경광등 아이콘, 빨간 포인트, 캐릭터 좌측 배치..."/>
+    </div>
+  </div>
+</div>
+
+<!-- 결과 -->
+
+<div class="res" id="res-area">
+  <div class="res-group">
+    <div class="res-head">
+      <div class="res-ttl">생성된 프롬프트</div>
+      <span class="res-badge">3가지 변형</span>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="var-body" id="var-area"></div>
+    <div class="res-divider"></div>
+    <div id="ref-sum-area"></div>
+    <div class="tips-box" id="tips-box" style="display:none">
+      <div class="tips-ttl">사용 팁</div>
+      <div id="tips-list"></div>
+    </div>
+    <div class="tools-row">
+      <div class="tools-lbl">추천 도구</div>
+      <div class="tools">
+        <div class="tool"><div class="tn">Ideogram</div><div class="td">한글 최강</div></div>
+        <div class="tool"><div class="tn">Midjourney</div><div class="td">이미지 품질</div></div>
+        <div class="tool"><div class="tn">Adobe Firefly</div><div class="td">상업용 안전</div></div>
+        <div class="tool"><div class="tn">DALL·E 3</div><div class="td">GPT 통합</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>DB손해보험 디자인팀</footer>
+
+<!-- FAB -->
+
+<div class="fab-wrap">
+  <button class="gbtn off" id="gen-btn" onclick="generate()">배너 내용을 먼저 입력해주세요</button>
+</div>
+
+<script>
+const SIZES=[
+  {id:'ep',    label:'EP 공지',   w:420,h:320,tag:'기본'},
+  {id:'wide',  label:'와이드',    w:800,h:300},
+  {id:'square',label:'SNS 정사각',w:600,h:600},
+  {id:'vert',  label:'세로형',    w:400,h:600},
+  {id:'popup', label:'팝업',      w:375,h:500},
+  {id:'custom',label:'직접 입력', w:null,h:null},
+];
+const MOODS=[
+  {id:'corporate',label:'기업 공식',emoji:'🏢',
+   style:'professional formal corporate design, clean navy and white scheme, grid layout, institutional authority',
+   comp:'centered title block, logo space top-right, horizontal rule dividers',
+   neg:'casual, playful, loud, messy, handwritten'},
+  {id:'bold',label:'임팩트',emoji:'💥',
+   style:'bold high-impact design, extreme contrast, dynamic diagonal composition, eye-catching typography',
+   comp:'oversized headline, aggressive crop, strong geometric shapes, vivid accent',
+   neg:'subtle, quiet, low contrast, boring, minimal'},
+  {id:'friendly',label:'친근 따뜻',emoji:'😊',
+   style:'friendly warm approachable design, rounded shapes, pastel accents, inviting tone',
+   comp:'rounded corners, soft gradient, friendly illustration character, gentle shadow',
+   neg:'harsh, cold, dark, aggressive, stiff'},
+  {id:'modern',label:'모던',emoji:'✦',
+   style:'modern contemporary design, geometric shapes, asymmetric layout, monochrome with single accent',
+   comp:'grid-breaking elements, large date as graphic element, negative space, sans-serif elegance',
+   neg:'outdated, busy, ornamental, retro'},
+  {id:'urgent',label:'긴급 공지',emoji:'🚨',
+   style:'urgent alert design, high-visibility warning style, red accent dominant, bold warning cues',
+   comp:'warning icon top-left, red header strip, exclamation graphic, high contrast text on dark',
+   neg:'calm, pastel, quiet, gentle, decorative'},
+  {id:'premium',label:'프리미엄',emoji:'💎',
+   style:'premium luxury design, gold accent on deep navy or black, refined typography, sophisticated',
+   comp:'gold rule lines, dark background, elegant sans headline, understated detail',
+   neg:'cheap, garish, loud, casual, budget look'},
+];
+
+const ST={sizeId:'ep',moodId:'corporate',colors:[],styleInfo:null,result:null,tab:0};
+
+(function(){
+  const sg=document.getElementById('sz-grid');
+  SIZES.forEach(s=>{
+    const b=document.createElement('button');
+    b.className='sz-chip'+(s.id==='ep'?' on':'');
+    b.dataset.id=s.id;
+    b.innerHTML=`<span class="sn">${s.label}${s.tag?`<span class="stag">${s.tag}</span>`:''}</span>${s.w?`<span class="sp">${s.w}×${s.h}</span>`:''}`;
+    b.onclick=()=>selSz(s.id); sg.appendChild(b);
+  });
+  const mg=document.getElementById('mo-grid');
+  MOODS.forEach(m=>{
+    const b=document.createElement('button');
+    b.className='mo-chip'+(m.id==='corporate'?' on':'');
+    b.dataset.id=m.id;
+    b.innerHTML=`<span class="mo-em">${m.emoji}</span><span class="mo-lbl">${m.label}</span>`;
+    b.onclick=()=>selMo(m.id); mg.appendChild(b);
+  });
+  setupDrop('ref-zone',handleRef);
+})();
+
+function selSz(id){
+  ST.sizeId=id;
+  document.querySelectorAll('.sz-chip').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+  document.getElementById('cust-row').style.display=id==='custom'?'flex':'none';
+}
+function selMo(id){
+  ST.moodId=id;
+  document.querySelectorAll('.mo-chip').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+}
+function getWH(){
+  if(ST.sizeId==='custom')return[+document.getElementById('cw').value||420,+document.getElementById('ch').value||320];
+  const s=SIZES.find(x=>x.id===ST.sizeId);return[s.w,s.h];
+}
+function setupDrop(id,fn){
+  const z=document.getElementById(id);
+  z.ondragover=e=>{e.preventDefault();z.classList.add('on')};
+  z.ondragleave=()=>z.classList.remove('on');
+  z.ondrop=e=>{e.preventDefault();z.classList.remove('on');const f=e.dataTransfer.files[0];if(f)fn(f)};
+}
+function compress(file,maxPx=800){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();r.onerror=rej;
+    r.onload=({target:{result}})=>{
+      const img=new Image();img.onerror=rej;
+      img.onload=()=>{
+        let{width:w,height:h}=img;
+        const ratio=Math.min(maxPx/w,maxPx/h,1);
+        w=Math.floor(w*ratio);h=Math.floor(h*ratio);
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+        res(c.toDataURL('image/jpeg',.88));
+      };img.src=result;
+    };r.readAsDataURL(file);
+  });
+}
+function extractColors(src){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const S=60,c=document.createElement('canvas');c.width=S;c.height=S;
+      const ctx=c.getContext('2d');ctx.drawImage(img,0,0,S,S);
+      const px=ctx.getImageData(0,0,S,S).data,map={};
+      for(let i=0;i<px.length;i+=4){
+        if(px[i+3]<100)continue;
+        const r=Math.round(px[i]/45)*45,g=Math.round(px[i+1]/45)*45,b=Math.round(px[i+2]/45)*45;
+        if(Math.max(r,g,b)-Math.min(r,g,b)<35)continue;
+        const k=`${r},${g},${b}`;map[k]=(map[k]||0)+1;
+      }
+      res(Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,6)
+        .map(([k])=>'#'+k.split(',').map(v=>Number(v).toString(16).padStart(2,'0')).join('')));
+    };img.onerror=()=>res([]);img.src=src;
+  });
+}
+function analyzeStyle(src){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const SZ=100,c=document.createElement('canvas');c.width=SZ;c.height=SZ;
+      const ctx=c.getContext('2d');ctx.drawImage(img,0,0,SZ,SZ);
+      const data=ctx.getImageData(0,0,SZ,SZ).data,total=SZ*SZ;
+      const gray=new Float32Array(total);
+      let sumB=0,sumS=0,wPx=0,dPx=0;const cSet=new Set();
+      for(let i=0;i<total;i++){
+        const r=data[i*4],g=data[i*4+1],b=data[i*4+2];
+        const lum=.299*r+.587*g+.114*b;gray[i]=lum;sumB+=lum;
+        const mx=Math.max(r,g,b),mn=Math.min(r,g,b);sumS+=mx===0?0:(mx-mn)/mx;
+        if(lum>220)wPx++;if(lum<40)dPx++;
+        cSet.add((r>>5<<6)|(g>>5<<3)|(b>>5));
+      }
+      const aB=sumB/total,aS=sumS/total,cDiv=cSet.size,wR=wPx/total,dR=dPx/total;
+      let eSum=0;
+      for(let y=1;y<SZ-1;y++)for(let x=1;x<SZ-1;x++){
+        const i=y*SZ+x;
+        const gx=-gray[i-SZ-1]-2*gray[i-1]+gray[i+SZ-1]+gray[i-SZ+1]+2*gray[i+1]+gray[i+SZ+1];
+        const gy=-gray[i-SZ-1]-2*gray[i-SZ]+gray[i-SZ+1]+gray[i+SZ-1]+2*gray[i+SZ]+gray[i+SZ+1];
+        eSum+=Math.sqrt(gx*gx+gy*gy);
+      }
+      const eD=eSum/((SZ-2)*(SZ-2)*255);
+      let vSum=0;for(let i=0;i<total;i++)vSum+=(gray[i]-aB)**2;
+      const bV=Math.sqrt(vSum/total)/128;
+      const isLine=eD>0.12&&wR>0.35&&cDiv<120,isFlat=eD<0.09&&cDiv<140&&aS>0.25;
+      const isGrad=eD<0.07&&bV>0.5&&cDiv<180,is3D=bV>0.6&&cDiv>200&&aS>0.2;
+      const isPhoto=cDiv>350&&aS<0.4,isIllust=aS>0.35&&cDiv>150&&cDiv<360&&eD>0.05;
+      const isDark=dR>0.35;
+      let styleId,styleName,styleEmoji,styleDesc,stylePrompt;
+      if(isLine)      {styleId='line';styleName='라인 일러스트';styleEmoji='✏️';styleDesc='선 위주 일러스트 · 깔끔한 아웃라인';stylePrompt='line illustration style, clean outlines, minimal shading, flat color fills';}
+      else if(isPhoto){styleId='photo';styleName='실사/포토';styleEmoji='📷';styleDesc='사진에 가까운 이미지 · 자연스러운 색상';stylePrompt='photorealistic style, natural lighting, detailed textures';}
+      else if(is3D)   {styleId='3d';styleName='3D 렌더링';styleEmoji='🧊';styleDesc='입체감 있는 3D · 그림자와 광원 효과';stylePrompt='3D rendered style, volumetric lighting, depth and shadow, CGI quality';}
+      else if(isGrad) {styleId='grad';styleName='그라디언트';styleEmoji='🌈';styleDesc='부드러운 그라디언트 · 세련된 스타일';stylePrompt='modern gradient design, smooth color transitions, minimalist style';}
+      else if(isFlat) {styleId='flat';styleName='플랫 디자인';styleEmoji='◼';styleDesc='그림자 없는 플랫 · 단순한 도형';stylePrompt='flat design style, no shadows, bold geometric shapes, clean 2D';}
+      else if(isIllust){styleId='ill';styleName='채색 일러스트';styleEmoji='🎨';styleDesc='컬러풀한 일러스트 · 생동감 있는 캐릭터';stylePrompt='colorful illustration style, vibrant character design, editorial artwork';}
+      else if(isDark) {styleId='dark';styleName='다크/네온';styleEmoji='🌙';styleDesc='어두운 배경 · 포인트 컬러';stylePrompt='dark background, neon accent colors, glow effects, high contrast';}
+      else            {styleId='mix';styleName='혼합/기타';styleEmoji='🎭';styleDesc='복합적인 스타일';stylePrompt='mixed media graphic design, versatile composition';}
+      res({styleId,styleName,styleEmoji,styleDesc,stylePrompt,
+        metrics:{edge:Math.round(eD*100),colorDiv:Math.round(cDiv/5.12),sat:Math.round(aS*100),contrast:Math.round(Math.min(bV*50,100))}});
+    };img.onerror=()=>res(null);img.src=src;
+  });
+}
+async function handleRef(file){
+  if(!file?.type.startsWith('image/'))return;
+  const zone=document.getElementById('ref-zone'),ov=document.getElementById('ref-ov'),empty=document.getElementById('ref-empty');
+  ov.style.display='flex';
+  try{
+    const prev=await compress(file,700);
+    empty.style.display='none';setZoneImg(zone,prev,'ref-img');
+    [ST.colors,ST.styleInfo]=await Promise.all([extractColors(prev),analyzeStyle(prev)]);
+    const s2n=document.getElementById('s2n');
+    s2n.classList.add('done');s2n.textContent='✓';
+    document.getElementById('s2ok').style.display='inline';
+    renderAna();
+  }catch(e){console.error(e);}
+  finally{ov.style.display='none';}
+}
+function setZoneImg(zone,src,cls){
+  let img=zone.querySelector(`img.${cls}`);
+  if(!img){img=document.createElement('img');img.className=cls;zone.appendChild(img);}
+  img.src=src;img.style.maxHeight='220px';
+  let rep=zone.querySelector('.rep-tag');
+  if(!rep){rep=document.createElement('div');rep.className='rep-tag';rep.textContent='클릭하여 교체';zone.appendChild(rep);}
+}
+function mc(v){return v>66?'#00C471':v>33?'#FF7B00':'#8A6FE8'}
+function renderAna(){
+  const c=ST.colors,si=ST.styleInfo;
+  if(!c.length&&!si){document.getElementById('ana-area').innerHTML='';return;}
+  const colHtml=c.length?`<div class="ana-box col-box"><div class="ana-ttl">Color Palette</div><div class="pal-bar">${c.map(x=>`<div style="background:${x}" title="${x}"></div>`).join('')}</div><div class="pal-chips">${c.map(x=>`<span class="pchip"><span class="pdot" style="background:${x}"></span>${x}</span>`).join('')}</div></div>`:'';
+  const styHtml=si?`<div class="ana-box sty-box"><div class="ana-ttl">Style</div><div class="sty-badge"><span style="font-size:15px">${si.styleEmoji}</span><span class="sty-name">${si.styleName}</span></div><div class="sty-desc">${si.styleDesc}</div><div class="met-grid">${[['엣지',si.metrics.edge],['색상',si.metrics.colorDiv],['채도',si.metrics.sat],['대비',si.metrics.contrast]].map(([l,v])=>`<div class="met"><div class="met-lbl">${l}</div><div class="met-bar"><div class="met-fill" style="width:${v}%;background:${mc(v)}"></div></div><div class="met-val">${v}%</div></div>`).join('')}</div><div class="ana-note">→ 프롬프트에 자동 반영돼요</div></div>`:'';
+  document.getElementById('ana-area').innerHTML=`<div class="ana-wrap">${colHtml}${styHtml}</div>`;
+}
+function onTxt(ta){
+  const v=ta.value.trim();
+  ta.classList.toggle('has',v.length>0);
+  document.getElementById('clr-btn').style.display=v?'inline':'none';
+  const tc=document.getElementById('tcnt');
+  tc.style.display=v?'block':'none';
+  tc.textContent=`✓ ${v.split('\n').filter(Boolean).length}줄 입력됨`;
+  const btn=document.getElementById('gen-btn');
+  const s1n=document.getElementById('s1n');
+  if(v){
+    btn.className='gbtn on';btn.textContent='배너 프롬프트 생성하기';
+    s1n.classList.remove('active');s1n.classList.add('done');s1n.textContent='✓';
+    document.getElementById('s1ok').style.display='inline';
+  }else{
+    btn.className='gbtn off';btn.textContent='배너 내용을 먼저 입력해주세요';
+    s1n.classList.remove('done');s1n.classList.add('active');s1n.textContent='1';
+    document.getElementById('s1ok').style.display='none';
+  }
+}
+function clearTxt(){const ta=document.getElementById('content');ta.value='';onTxt(ta);}
+function generate(){
+  const text=document.getElementById('content').value.trim();if(!text)return;
+  const[W,H]=getWH(),mood=MOODS.find(m=>m.id===ST.moodId),extra=document.getElementById('extra').value.trim(),ar=`${W}:${H}`;
+  const colorLine=ST.colors.length?`dominant colors from reference: ${ST.colors.slice(0,3).join(', ')}, harmonious palette`:'professional Korean corporate color palette, navy and white base';
+  const styleLine=ST.styleInfo?ST.styleInfo.stylePrompt:'clean graphic design, sharp crisp edges';
+  const txt=text.replace(/\n/g,' ').slice(0,200);
+  const base=`professional Korean insurance company EP announcement banner, ${W}x${H}px, ${mood.style}, ${styleLine}, ${colorLine}, ${mood.comp}, Korean text clearly legible, high resolution corporate design, no watermark`;
+  ST.result={
+    variants:[
+      {label:'레퍼런스 충실',prompt:`${base}, text content: "${txt}", faithful to reference composition, balanced centered layout${extra?', '+extra:''}`,negative:`${mood.neg}, blurry, low quality, watermark, distorted Korean text, overly complex`},
+      {label:'크리에이티브',prompt:`${base}, text: "${txt}", bold creative reinterpretation, dynamic asymmetric layout, strong typographic statement${extra?', '+extra:''}`,negative:`${mood.neg}, blurry, low quality, watermark, safe boring layout, generic`},
+      {label:'임팩트 강화',prompt:`${base}, headline: "${txt.slice(0,100)}", maximum visual impact, dominant typography 60% of frame, minimal supporting text, arresting composition${extra?', '+extra:''}`,negative:`${mood.neg}, blurry, low quality, watermark, text-heavy, cluttered, weak hierarchy`},
+    ],
+    tips:[
+      'Ideogram 권장 — 한글 텍스트 인식률 가장 높아요. 프롬프트 그대로 붙여넣기',
+      `Midjourney — 프롬프트 끝에 '--ar ${ar} --v 6.1 --style raw' 추가${ST.colors.length?' · --sref 레퍼런스 이미지로 스타일 고정 가능':''}`,
+      ST.styleInfo?`레퍼런스 스타일 감지: ${ST.styleInfo.styleEmoji} ${ST.styleInfo.styleName} → 프롬프트에 반영 완료`:'Adobe Firefly — 사이즈 직접 지정 가능, 상업적 사용 안전',
+    ]
+  };
+  ST.tab=0;renderRes();
+  document.getElementById('res-area').scrollIntoView({behavior:'smooth'});
+}
+function renderRes(){
+  const r=ST.result;
+  document.getElementById('res-area').style.display='block';
+  document.getElementById('tabs').innerHTML=r.variants.map((v,i)=>`<button class="tab${ST.tab===i?' on':''}" onclick="swTab(${i})">${['🎯','✨','🔥'][i]} ${v.label}</button>`).join('');
+  renderVar();
+  let refHtml='';
+  if(ST.colors.length||ST.styleInfo){
+    const bar=ST.colors.length?`<div class="pal-bar" style="height:14px;margin-top:8px">${ST.colors.map(c=>`<div style="background:${c}"></div>`).join('')}</div>`:'';
+    const stag=ST.styleInfo?`<span style="background:var(--green-bg);border-radius:8px;padding:3px 11px;font-size:11px;color:var(--green);font-weight:700">${ST.styleInfo.styleEmoji} ${ST.styleInfo.styleName}</span>`:'';
+    refHtml=`<div class="ref-sum"><div class="ref-sum-ttl">반영된 레퍼런스</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${stag}</div>${bar}</div>`;
+  }
+  document.getElementById('ref-sum-area').innerHTML=refHtml;
+  if(r.tips?.length){
+    document.getElementById('tips-box').style.display='block';
+    document.getElementById('tips-list').innerHTML=r.tips.map(t=>`<div class="tip"><span class="tip-a">→</span><span class="tip-t">${esc(t)}</span></div>`).join('');
+  }
+}
+function renderVar(){
+  const v=ST.result.variants[ST.tab];
+  document.getElementById('var-area').innerHTML=`
+    <div class="rblk"><div class="rlbl">English Prompt</div><div class="rbody"><p class="rtext">${esc(v.prompt)}</p><button class="cpbtn" data-key="prompt" onclick="doCp(this)">복사</button></div></div>
+    <div class="rblk"><div class="rlbl">Negative Prompt</div><div class="rbody neg"><p class="rtext neg">${esc(v.negative)}</p><button class="cpbtn" data-key="negative" onclick="doCp(this)">복사</button></div></div>`;
+}
+function swTab(i){ST.tab=i;document.querySelectorAll('.tab').forEach((b,j)=>b.classList.toggle('on',i===j));renderVar();}
+function doCp(btn){
+  const v=ST.result.variants[ST.tab];
+  const text=btn.dataset.key==='prompt'?v.prompt:v.negative;
+  navigator.clipboard.writeText(text).catch(()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);});
+  btn.textContent='✓ 복사됨';btn.classList.add('done');
+  setTimeout(()=>{btn.textContent='복사';btn.classList.remove('done');},2000);
+}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+
+</body>
+</html>
